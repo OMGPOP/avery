@@ -6,9 +6,9 @@ Avery is a real-time time-based metric storage, retrieval, and graphing service.
 Goals
 ------
 * Web-service
-* Generalized for any type of metrics
-* RRD-style Data Structure (Time series data)
+* Generalized for any type of metric
 * Real-time accessibility
+* RRD-style Data Structure (Time series data)
 * Wizard for creating data structures
 * JSON/PNG Export
 * Pretty colors
@@ -19,6 +19,11 @@ Web-service
 -----------
 * NodeJS
 * Redis data-store
+
+Real-time accessibility
+-----------------------
+* Socket.IO
+* Redis Publish/Subscribe if needed
 
 RRD-style Data Structure (Time series data)
 -------------------------------------------
@@ -37,11 +42,6 @@ RRD-style Data Structure (Time series data)
     	This sets up an RRD called temperature.rrd which accepts one temperature value every 300 seconds. If no new data is supplied for more than 600 seconds, the temperature becomes *UNKNOWN*. The minimum acceptable value is -273 and the maximum is 5'000.  
 
     	A few archive areas are also defined. The first stores the temperatures supplied for 100 hours (1'200 * 300 seconds = 100 hours). The second RRA stores the minimum temperature recorded over every hour (12 * 300 seconds = 1 hour), for 100 days (2'400 hours). The third and the fourth RRA's do the same for the maximum and average temperature, respectively.
-
-Real-time accessibility
------------------------
-* Socket.IO
-* Redis Publish/Subscribe if needed
 
 Wizard for creating data structures
 -----------------------------------
@@ -62,3 +62,6 @@ Pretty colors
 * green
 * blue
 * shades of gray
+
+
+Where did the name Avery come from? "real-time time-based metric storage, retrieval, and graphing service" or RTTBMSRAGS for short, was **a very** long name.

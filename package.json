@@ -4,6 +4,7 @@
   "dependencies": {
     "express": "*",
 		"jade": "*",
-		"redis": "*"
+		"redis": "*",
+		"underscore": "*"
   }
 }
