@@ -1,0 +1,1 @@
+web: node avery.js
