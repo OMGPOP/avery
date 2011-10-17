@@ -30,10 +30,13 @@ app.post("/create/:key/:metric", function(req, res) {
   var hoardDirectory = path.join(".", hoardPath, req.params.key)
   var hoardFile = path.join(hoardDirectory, req.params.metric+".hoard")
   mkdirp(hoardDirectory, 0755, function (err) {
-    // TODO: un-hardcode archive options [ [1, 60], [10, 600] ]
-    hoard.create(hoardFile, [ [1, 60], [10, 600] ], 0.5, function(err) {
-      if (err) return res.send({ success: false, error: err })
-      res.send({ success: true, file: hoardFile })
+    path.exists(hoardFile, function(exists) {
+      if (exists) return res.send({ success: false, error: ":key/:metric pair already created.", file: hoardFile })
+      // TODO: un-hardcode archive options [ [1, 60], [10, 600] ]
+      hoard.create(hoardFile, [ [1, 60], [10, 600] ], 0.5, function(err) {
+        if (err) return res.send({ success: false, error: err })
+        res.send({ success: true, file: hoardFile })
+      })
     })
   })
 });
