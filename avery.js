@@ -35,7 +35,7 @@ app.post("/create/:key/:metric", function(req, res) {
     path.exists(hoardFile, function(exists) {
       if (exists) return res.send({ success: false, error: ":key/:metric pair already created.", file: hoardFile })
       // TODO: un-hardcode archive options [ [1, 60], [10, 600] ]
-      hoard.create(hoardFile, [ [1, 60], [10, 600] ], 0.5, function(err) {
+      hoard.create(hoardFile, [ [10, 360] ], 0.5, function(err) {
         if (err) return res.send({ success: false, error: err })
         res.send({ success: true, file: hoardFile })
       })
