@@ -22,6 +22,8 @@ app.configure(function() {
   app.set('views', __dirname + '/views'),
   app.set('view engine', 'jade'),
   app.set('view options', { layout: 'layout' })
+  app.use(express.bodyParser());
+  app.use(express.methodOverride());
 });
 
 // writes
@@ -42,7 +44,7 @@ app.post("/create/:key/:metric", function(req, res) {
 });
 
 app.post("/update/:key/:metric", function(req, res) {
-  var value = req.query.value;
+  var value = req.body.value;
   var time = ts();
   var hoardDirectory = path.join(".", hoardPath, req.params.key)
   var hoardFile = path.join(hoardDirectory, req.params.metric+".hoard")
@@ -57,7 +59,7 @@ app.post("/update/:key/:metric", function(req, res) {
 
 app.post("/updateMany/:key/:metric", function(req, res) {
   return res.send({ success: false, error: "this feature is not yet implemented. use: /update/"+req.params.key+"/"+req.params.metric })
-  var value = req.query.value;
+  var value = req.body.value;
   var time = ts();
   var values = [ [time, value], [time, value*2] ];
   var hoardDirectory = path.join(".", hoardPath, req.params.key)
