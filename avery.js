@@ -1,8 +1,16 @@
-var express = require('express'), redis = require('redis'), _ = require('underscore');
+var path = require('path');
+var mkdirp = require('mkdirp');
 
-var redisClient = redis.createClient();
-var redisNamespace = "avery";
+var express = require('express'), _ = require('underscore');
 
+var hoard = require('hoard');
+var hoardPath = "hoard_files"
+
+//var redis = require('redis');
+//var redisClient = redis.createClient();
+//var redisNamespace = "avery";
+
+function ts() { return ~~(new Date().getTime() / 1000) }
 var port = process.env.PORT || 3000;
 
 var app = express.createServer(
@@ -16,53 +24,63 @@ app.configure(function() {
   app.set('view options', { layout: 'layout' })
 });
 
-
-app.get("/put/:key/:metric", function(req, res) {
-  
-  // build the event
-  var ts = ~~(new Date().getTime() / 1000)
-  var value = req.query.value||0;
-  var key = req.params.key
-  var metric = req.params.metric
-
-  // build the redis keys
-  var keys = {
-    metricDS: redisNamespace+":metric:"+metric+":ds",
-    metricRRAs: redisNamespace+":metric:"+metric+":rras",
-    metricData: redisNamespace+":data:"+key+":"+metric,
-  }
-  
-  redisClient.multi().hgetall(keys['metricDS']).hgetall(keys['metricRRAs']).exec(function(err, reply) {
-    // place DS definition into variable
-    var metricDS = reply[0];
-    // we store RRA definition as JSON in the redis hash.
-    var metricsRRAs = _.map(reply[1], function(rraDefinition,rra) { return { id: rra, definition: JSON.parse(rraDefinition) } })
-
-    // error handling
-    if (!metricDS['dt']||!metricDS['epoch']) return res.send({ success: false, error: "invalid metric"})
-    if (!metricsRRAs[0]) return res.send({ success: false, error: "must have at least one archive"})
-
-    // map event to destination
-    var dt = Number(metricDS['dt']);
-    var epoch = Number(metricDS['epoch']);
-    var bucket = epoch + (~~((ts - epoch) / dt) * dt);
-    
-    // return success, async it to the db.
-    res.send({ success: true, bucket: bucket })
-
-    // add value to key:metric w/ ts then trim.
-    _.each(metricsRRAs, function(rra) {
-      redisClient.zadd(keys['metricData']+":"+rra['id'], bucket, ts+"_"+value, function(err, response) {
-        redisClient.zremrangebyscore(keys['metricData']+":"+rra['id'], "-inf", "("+(bucket - (dt * Number(rra['definition']['steps']))))
-      })
+// writes
+app.post("/create/:key/:metric", function(req, res) {
+  var time = ts();
+  var hoardDirectory = path.join(".", hoardPath, req.params.key)
+  var hoardFile = path.join(hoardDirectory, req.params.metric+".hoard")
+  mkdirp(hoardDirectory, 0755, function (err) {
+    // TODO: un-hardcode archive options [ [1, 60], [10, 600] ]
+    hoard.create(hoardFile, [ [1, 60], [10, 600] ], 0.5, function(err) {
+      if (err) return res.send({ success: false, error: err })
+      res.send({ success: true, file: hoardFile })
     })
-    
   })
-})
+});
 
-app.get("/get", function(req, res) {
-  res.send({ success: true })
-})
+app.post("/update/:key/:metric", function(req, res) {
+  var value = req.query.value;
+  var time = ts();
+  var hoardDirectory = path.join(".", hoardPath, req.params.key)
+  var hoardFile = path.join(hoardDirectory, req.params.metric+".hoard")
+  path.exists(hoardFile, function(exists) {
+    if (!exists) return res.send({ success: false, error: "no such :key/:metric pair. use: /create/"+req.params.key+"/"+req.params.metric, file: hoardFile })
+    hoard.update(hoardFile, value, time, function(err) {
+      if (err) return res.send({ success: false, error: err })
+      res.send({ success: true })
+    })
+  })
+});
+
+app.post("/updateMany/:key/:metric", function(req, res) {
+  return res.send({ success: false, error: "this feature is not yet implemented. use: /update/"+req.params.key+"/"+req.params.metric })
+  var value = req.query.value;
+  var time = ts();
+  var values = [ [time, value], [time, value*2] ];
+  var hoardDirectory = path.join(".", hoardPath, req.params.key)
+  var hoardFile = path.join(hoardDirectory, req.params.metric+".hoard")
+  path.exists(hoardFile, function(exists) {
+    if (!exists) return res.send({ success: false, error: "no such :key/:metric pair. use: /create/"+req.params.key+"/"+req.params.metric, file: hoardFile })
+    hoard.updateMany(hoardFile, values, function(err) {
+      if (err) return res.send({ success: false, error: err })
+      res.send({ success: true })
+    })
+  })
+});
+
+// reads
+app.get("/fetch/:key/:metric", function(req, res) {
+  var time = ts();
+  var hoardDirectory = path.join(".", hoardPath, req.params.key)
+  var hoardFile = path.join(hoardDirectory, req.params.metric+".hoard")
+  path.exists(hoardFile, function(exists) {
+    if (!exists) return res.send({ success: false, error: "no such :key/:metric pair. use: /create/"+req.params.key+"/"+req.params.metric, file: hoardFile })
+    hoard.fetch(hoardFile, (time-60), time, function(err, timeInfo, values) {
+      if (err) return res.send({ success: false, error: err })
+      res.send({ success: true, ts: time, timeInfo: timeInfo, values: values })
+    })
+  })
+});
 
 app.get("/", function(req, res) {
   res.render('avery')

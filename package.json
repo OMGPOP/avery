@@ -5,6 +5,8 @@
     "express": "*",
 		"jade": "*",
 		"redis": "*",
-		"underscore": "*"
+		"underscore": "*",
+		"hoard": "*",
+		"mkdirp": "*"
   }
 }
