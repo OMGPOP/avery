@@ -79,9 +79,10 @@ app.get("/fetch/:key/:metric", function(req, res) {
   var time = ts();
   var hoardDirectory = path.join(".", hoardPath, req.params.key)
   var hoardFile = path.join(hoardDirectory, req.params.metric+".hoard")
+  var offset = req.query.offset ? time-req.query.offset : time-60;
   path.exists(hoardFile, function(exists) {
     if (!exists) return res.send({ success: false, error: "no such :key/:metric pair. use: /create/"+req.params.key+"/"+req.params.metric, file: hoardFile })
-    hoard.fetch(hoardFile, (time-60), time, function(err, timeInfo, values) {
+    hoard.fetch(hoardFile, offset, time, function(err, timeInfo, values) {
       if (err) return res.send({ success: false, error: err })
       res.send({ success: true, ts: time, timeInfo: timeInfo, values: values })
     })
