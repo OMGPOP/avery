@@ -44,6 +44,7 @@ app.post("/create/:key/:metric", function(req, res) {
 });
 
 app.post("/update/:key/:metric", function(req, res) {
+  if (typeof(req.body) == "undefined" || typeof(req.body.value) == "undefined") return res.send({ success: false, error: "no value specified." })
   var value = req.body.value;
   var time = ts();
   var hoardDirectory = path.join(".", hoardPath, req.params.key)
