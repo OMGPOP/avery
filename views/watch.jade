@@ -1,3 +1,5 @@
-div#chart.bar
+div#center
+    div#chart
+    div#chartData
 script
-    $(function() { Avery.watch($('#chart'), !{JSON.stringify(range)}, !{JSON.stringify(offset)}, !{JSON.stringify(metrics)} ); setInterval(function() { Avery.watch($('#chart'), !{JSON.stringify(range)}, !{JSON.stringify(offset)}, !{JSON.stringify(metrics)} ) }, 15000) })
+    $(function() { Avery.watch($('#chart'), $('#chartData'), !{JSON.stringify(range)}, !{JSON.stringify(offset)}, !{JSON.stringify(metrics)} ); setInterval(function() { Avery.watch($('#chart'), $('#chartData'), !{JSON.stringify(range)}, !{JSON.stringify(offset)}, !{JSON.stringify(metrics)} ) }, 15000) })

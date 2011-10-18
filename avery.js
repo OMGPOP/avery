@@ -96,8 +96,8 @@ app.post("/updateMany/:key/:metric", function(req, res) {
 app.get("/fetch", function(req, res) {
   if (!req.query.metrics) return res.send({ success: false, error: "must specify query string metrics" })
   var time = ts();
-  var startTime = req.query.range ? time-req.query.range : time-86400;
   var endTime = req.query.offset ? time-req.query.offset : time;
+  var startTime = req.query.range ? endTime-req.query.range : endTime-86400;
   var metrics = typeof(req.query.metrics) == "string" ? [ req.query.metrics ] : req.query.metrics
   metrics = _.map(metrics, function(metric) { return { key: metric.split("/")[0], metric: metric.split("/")[1] } })
   res.header('Access-Control-Allow-Origin','*');
