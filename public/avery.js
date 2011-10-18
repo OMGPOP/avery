@@ -12,8 +12,7 @@ var Avery = {
           $('<th>').html("last")
         )
       )
-      _.each(x['metrics'], function(metric) {
-        console.log(metric)
+      _.each(_.sortBy(x['metrics'], function(metric) { return _.last(_.compact(metric['values']))||0 }).reverse(), function(metric) {
         $chartDataTable.append(
           $('<tr>').append(
             $('<td>').html(metric['metric'].split("/")[0].replace(".omgpop.com","")),
