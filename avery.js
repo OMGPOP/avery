@@ -107,13 +107,15 @@ app.get("/fetch", function(req, res) {
 });
 
 app.get("/watch/:key/:metric", function(req, res) {
+  var range = req.query.range||86400;
+  var offset = req.query.offset||0;
   if (req.params.key == "all") {
     exec("find "+hoardPath+" -name '"+req.params.metric+".hoard'", function(err, stdout, stderr) {
       var metrics = _.map(_.compact(stdout.split('\n')), function(hoardFile) { return path.dirname(hoardFile).replace(hoardPath+"/","")+"/"+path.basename(hoardFile, '.hoard') });
-      res.render('watch', { metrics: metrics })
+      res.render('watch', { range: range, offset: offset, metrics: metrics })
     })
   } else {
-    res.render('watch', { metrics: [ req.params.key+"/"+req.params.metric ] })
+    res.render('watch', { range: range, offset: offset, metrics: [ req.params.key+"/"+req.params.metric ] })
   }
 });
 
