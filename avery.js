@@ -80,6 +80,7 @@ app.get("/fetch/:key/:metric", function(req, res) {
   var hoardDirectory = path.join(".", hoardPath, req.params.key)
   var hoardFile = path.join(hoardDirectory, req.params.metric+".hoard")
   var offset = req.query.offset ? time-req.query.offset : time-60;
+  res.header('Access-Control-Allow-Origin','*');
   path.exists(hoardFile, function(exists) {
     if (!exists) return res.send({ success: false, error: "no such :key/:metric pair. use: /create/"+req.params.key+"/"+req.params.metric, file: hoardFile })
     hoard.fetch(hoardFile, offset, time, function(err, timeInfo, values) {
