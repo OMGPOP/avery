@@ -47,16 +47,32 @@ app.post("/create/:key/:metric", function(req, res) {
 
 app.post("/update/:key/:metric", function(req, res) {
   if (typeof(req.body) == "undefined" || typeof(req.body.value) == "undefined") return res.send({ success: false, error: "no value specified." })
+  var autocreate = req.body.autocreate||false;
   var value = req.body.value;
   var time = ts();
   var hoardDirectory = path.join(".", hoardPath, req.params.key)
   var hoardFile = path.join(hoardDirectory, req.params.metric+".hoard")
   path.exists(hoardFile, function(exists) {
-    if (!exists) return res.send({ success: false, error: "no such :key/:metric pair. use: /create/"+req.params.key+"/"+req.params.metric, file: hoardFile })
-    hoard.update(hoardFile, value, time, function(err) {
-      if (err) return res.send({ success: false, error: err })
-      res.send({ success: true })
-    })
+    if (!exists) {
+      if (autocreate == 'true') {
+        mkdirp(hoardDirectory, 0755, function (err) {
+          path.exists(hoardFile, function(exists) {
+            hoard.create(hoardFile, [ [ 60, 1440 ], [ 600, 1008 ], [ 3600, 720 ], [ 86400, 720 ] ], 0.5, function(err) {
+              if (err) return res.send({ success: false, error: err })
+              return res.send({ success: true, autocreated: true })
+            })
+          })
+        })
+      } else {
+        return res.send({ success: false, error: "no such :key/:metric pair. use: /create/"+req.params.key+"/"+req.params.metric+" or specify autocreate=true.", file: hoardFile })
+      }
+    } else {
+      hoard.update(hoardFile, value, time, function(err) {
+        if (err) return res.send({ success: false, error: err })
+        res.send({ success: true })
+      })
+      
+    }
   })
 });
 
