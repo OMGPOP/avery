@@ -1,3 +1,3 @@
 div#chart.bar
 script
-    $(function() { setInterval(function() { Avery.watch($('#chart'), !{JSON.stringify(key)}, !{JSON.stringify(metric)}) }, 1000) })
+    $(function() { Avery.watch($('#chart'), !{JSON.stringify(metrics)} ); setInterval(function() { Avery.watch($('#chart'), !{JSON.stringify(metrics)} ) }, 15000) })

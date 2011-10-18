@@ -1,6 +1,7 @@
 var fs = require('fs');
 var path = require('path');
 var mkdirp = require('mkdirp');
+var exec = require('child_process').exec;
 
 var express = require('express'), _ = require('underscore');
 
@@ -36,7 +37,7 @@ app.post("/create/:key/:metric", function(req, res) {
     path.exists(hoardFile, function(exists) {
       if (exists) return res.send({ success: false, error: ":key/:metric pair already created.", file: hoardFile })
       // TODO: un-hardcode archive options [ [1, 60], [10, 600] ]
-      hoard.create(hoardFile, [ [10, 360] ], 0.5, function(err) {
+      hoard.create(hoardFile, [ [ 60, 1440 ], [ 600, 1008 ], [ 3600, 720 ], [ 86400, 720 ] ], 0.5, function(err) {
         if (err) return res.send({ success: false, error: err })
         res.send({ success: true, file: hoardFile })
       })
@@ -105,7 +106,14 @@ app.get("/fetch", function(req, res) {
 });
 
 app.get("/watch/:key/:metric", function(req, res) {
-  res.render('watch', { key: req.params.key, metric: req.params.metric })
+  if (req.params.key == "all") {
+    exec("find "+hoardPath+" -name '"+req.params.metric+".hoard'", function(err, stdout, stderr) {
+      var metrics = _.map(_.compact(stdout.split('\n')), function(hoardFile) { return path.dirname(hoardFile).replace(hoardPath+"/","")+"/"+path.basename(hoardFile, '.hoard') });
+      res.render('watch', { metrics: metrics })
+    })
+  } else {
+    res.render('watch', { metrics: [ req.params.key+"/"+req.params.metric ] })
+  }
 });
 
 app.get("/:key", function(req, res) {
