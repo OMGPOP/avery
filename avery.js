@@ -76,19 +76,32 @@ app.post("/updateMany/:key/:metric", function(req, res) {
 });
 
 // reads
-app.get("/fetch/:key/:metric", function(req, res) {
+app.get("/fetch", function(req, res) {
+  if (!req.query.metrics) return res.send({ success: false, error: "must specify query string metrics" })
   var time = ts();
-  var hoardDirectory = path.join(".", hoardPath, req.params.key)
-  var hoardFile = path.join(hoardDirectory, req.params.metric+".hoard")
+  var metrics = typeof(req.query.metrics) == "string" ? [ req.query.metrics ] : req.query.metrics
+  metrics = _.map(metrics, function(metric) { return { key: metric.split("/")[0], metric: metric.split("/")[1] } })
   var offset = req.query.offset ? time-req.query.offset : time-60;
   res.header('Access-Control-Allow-Origin','*');
-  path.exists(hoardFile, function(exists) {
-    if (!exists) return res.send({ success: false, error: "no such :key/:metric pair. use: /create/"+req.params.key+"/"+req.params.metric, file: hoardFile })
-    hoard.fetch(hoardFile, offset, time, function(err, timeInfo, values) {
-      if (err) return res.send({ success: false, error: err })
-      res.send({ success: true, ts: time, timeInfo: timeInfo, values: values })
-    })
-  })
+  var result = { success: true, ts: time, metrics: [] }
+  function getMetrics(x) {
+    if (x < metrics.length) {
+      var metric = metrics[x];
+      var hoardDirectory = path.join(".", hoardPath, metric.key)
+      var hoardFile = path.join(hoardDirectory, metric.metric+".hoard")
+      path.exists(hoardFile, function(exists) {
+        if (!exists) return res.send({ success: false, error: "no such :key/:metric pair. use: /create/"+metric.key+"/"+metric.metric, file: hoardFile })
+        hoard.fetch(hoardFile, offset, time, function(err, timeInfo, values) {
+          if (err) return res.send({ success: false, error: err })
+          result['metrics'].push({ metric:metric.key+"/"+metric.metric, values: values })
+          getMetrics(x+1)
+        })
+      })
+    } else {
+      res.send(result)
+    }
+  }
+  getMetrics(0)
 });
 
 app.get("/watch/:key/:metric", function(req, res) {
