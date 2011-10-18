@@ -1,2 +1,7 @@
-#center{width:700px;margin-left:auto;margin-right:auto;}
-#chart{background-color:#EEE;width:500px;height:250px;margin-left:auto;margin-right:auto;border:2px solid #ccc;padding-top:5px;padding-bottom:-2px;}
+#center{width:500px;margin-left:auto;margin-right:auto;}
+#chart{background-color:#EEE;width:500px;height:250px;margin-left:auto;margin-right:auto;border:2px solid #DDD;padding-top:5px;padding-right:2px;padding-left:1px;}
+table{background-color:#ddd;width:507px;margin-top:2px;}
+th{background-color:#ccc;}
+td{text-align:right;}
+tr:nth-child(odd){background-color:#eee;}
+tr:nth-child(even){background-color:#DFE7FE;}
