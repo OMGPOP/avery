@@ -12,13 +12,13 @@ var Avery = {
           $('<th>').html("last")
         )
       )
-      _.each(_.sortBy(x['metrics'], function(metric) { return _.last(_.compact(metric['values']))||0 }).reverse(), function(metric) {
+      _.each(_.sortBy(x['metrics'], function(metric) { return _.last(metric['values'])||0 }).reverse(), function(metric) {
         $chartDataTable.append(
           $('<tr>').append(
             $('<td>').html(metric['metric'].split("/")[0].replace(".omgpop.com","")),
-            $('<td>').html(String(_.min(_.compact(metric['values']))).replace("Infinity","0")),
-            $('<td>').html(String(_.max(_.compact(metric['values']))).replace("-Infinity","0")),
-            $('<td>').html(_.last(_.compact(metric['values']))||0)
+            $('<td>').html(String(_.min(metric['values'])).replace("Infinity","0")),
+            $('<td>').html(String(_.max(metric['values'])).replace("-Infinity","0")),
+            $('<td>').html(_.last(metric['values'])||0)
           )
         )
       })
@@ -26,9 +26,9 @@ var Avery = {
         $chartDataTable.append(
           $('<tr>').append(
             $('<th>').css("text-align","right").html("total"),
-            $('<th>').css("text-align","right").html(_.min(_.compact(stacked))),
-            $('<th>').css("text-align","right").html(_.max(_.compact(stacked))),
-            $('<th>').css("text-align","right").html(_.last(_.compact(stacked)))
+            $('<th>').css("text-align","right").html(_.min(stacked)),
+            $('<th>').css("text-align","right").html(_.max(stacked)),
+            $('<th>').css("text-align","right").html(_.last(stacked))
           )
         )
       }
