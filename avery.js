@@ -8,9 +8,9 @@ var express = require('express'), _ = require('underscore');
 var hoard = require('hoard');
 var hoardPath = "hoard_files"
 
-//var redis = require('redis');
-//var redisClient = redis.createClient();
-//var redisNamespace = "avery";
+var redis = require('redis');
+var redisClient = redis.createClient();
+var redisNamespace = "avery";
 
 function ts() { return ~~(new Date().getTime() / 1000) }
 var port = process.env.PORT || 3000;
@@ -77,6 +77,22 @@ app.post("/update/:key/:metric", function(req, res) {
 });
 
 app.post("/updateMany/:key/:metric", function(req, res) {
+  return res.send({ success: false, error: "this feature is not yet implemented. use: /update/"+req.params.key+"/"+req.params.metric })
+  var value = req.body.value;
+  var time = ts();
+  var values = [ [time, value], [time, value*2] ];
+  var hoardDirectory = path.join(".", hoardPath, req.params.key)
+  var hoardFile = path.join(hoardDirectory, req.params.metric+".hoard")
+  path.exists(hoardFile, function(exists) {
+    if (!exists) return res.send({ success: false, error: "no such :key/:metric pair. use: /create/"+req.params.key+"/"+req.params.metric, file: hoardFile })
+    hoard.updateMany(hoardFile, values, function(err) {
+      if (err) return res.send({ success: false, error: err })
+      res.send({ success: true })
+    })
+  })
+});
+
+app.post("/incr/:key/:metric", function(req, res) {
   return res.send({ success: false, error: "this feature is not yet implemented. use: /update/"+req.params.key+"/"+req.params.metric })
   var value = req.body.value;
   var time = ts();
