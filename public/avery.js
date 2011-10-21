@@ -26,8 +26,8 @@ var Avery = {
         $chartDataTable.append(
           $('<tr>').append(
             $('<th>').css("text-align","right").html("total"),
-            $('<th>').css("text-align","right").html(String(_.min(~~(_.compact(stacked)))).replace("Infinity","0")),
-            $('<th>').css("text-align","right").html(String(_.max(~~(_.compact(stacked)))).replace("-Infinity","0")),
+            $('<th>').css("text-align","right").html(String(~~(_.min(_.compact(stacked)))).replace("Infinity","0")),
+            $('<th>').css("text-align","right").html(String(~~(_.max(_.compact(stacked)))).replace("-Infinity","0")),
             $('<th>').css("text-align","right").html(String(~~(_.last(stacked))))
           )
         )
