@@ -16,9 +16,9 @@ var Avery = {
         $chartDataTable.append(
           $('<tr>').append(
             $('<td>').html(metric['metric'].split("/")[0]),
-            $('<td>').html(~~(String(_.min(_.compact(metric['values'])))).replace("Infinity","0")),
-            $('<td>').html(~~(String(_.max(_.compact(metric['values'])))).replace("-Infinity","0")),
-            $('<td>').html(~~(_.last(metric['values'])||0))
+            $('<td>').html(String(~~(_.min(_.compact(metric['values'])))).replace("Infinity","0")),
+            $('<td>').html(String(~~(_.max(_.compact(metric['values'])))).replace("-Infinity","0")),
+            $('<td>').html(String(~~(_.last(metric['values'])||0)))
           )
         )
       })
@@ -26,9 +26,9 @@ var Avery = {
         $chartDataTable.append(
           $('<tr>').append(
             $('<th>').css("text-align","right").html("total"),
-            $('<th>').css("text-align","right").html(~~(_.min(_.compact(stacked))).replace("Infinity","0")),
-            $('<th>').css("text-align","right").html(~~(_.max(_.compact(stacked))).replace("-Infinity","0")),
-            $('<th>').css("text-align","right").html(~~(_.last(stacked)))
+            $('<th>').css("text-align","right").html(String(_.min(~~(_.compact(stacked)))).replace("Infinity","0")),
+            $('<th>').css("text-align","right").html(String(_.max(~~(_.compact(stacked)))).replace("-Infinity","0")),
+            $('<th>').css("text-align","right").html(String(~~(_.last(stacked))))
           )
         )
       }
