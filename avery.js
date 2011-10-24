@@ -76,20 +76,48 @@ app.post("/update/:key/:metric", function(req, res) {
   })
 });
 
-app.post("/updateMany/:key/:metric", function(req, res) {
-  return res.send({ success: false, error: "this feature is not yet implemented. use: /update/"+req.params.key+"/"+req.params.metric })
-  var value = req.body.value;
+app.post("/updateMany/:key", function(req, res) {
+  var autocreate = req.body.autocreate||false;
+  var metrics = JSON.parse(req.body.metrics);
   var time = ts();
-  var values = [ [time, value], [time, value*2] ];
-  var hoardDirectory = path.join(".", hoardPath, req.params.key)
-  var hoardFile = path.join(hoardDirectory, req.params.metric+".hoard")
-  path.exists(hoardFile, function(exists) {
-    if (!exists) return res.send({ success: false, error: "no such :key/:metric pair. use: /create/"+req.params.key+"/"+req.params.metric, file: hoardFile })
-    hoard.updateMany(hoardFile, values, function(err) {
-      if (err) return res.send({ success: false, error: err })
-      res.send({ success: true })
-    })
-  })
+  var responses = [];
+  function updateMetrics(x) {
+    if (x < metrics.length) {
+      var metric = metrics[x]['metric'];
+      var value = metrics[x]['value'];
+      var hoardDirectory = path.join(".", hoardPath, req.params.key)
+      var hoardFile = path.join(hoardDirectory, metric+".hoard")
+      path.exists(hoardFile, function(exists) {
+        if (!exists) {
+          if (autocreate == 'true') {
+            mkdirp(hoardDirectory, 0755, function (err) {
+              path.exists(hoardFile, function(exists) {
+                hoard.create(hoardFile, [ [ 60, 1440 ], [ 600, 1008 ], [ 3600, 720 ], [ 86400, 720 ] ], 0.5, function(err) {
+                  if (err) return res.send({ success: false, error: err })
+                  hoard.update(hoardFile, value, time, function(err) {
+                    if (err) return res.send({ success: false, error: err })
+                    responses.push({ success: true, autocreated: true })
+                    updateMetrics(x+1)
+                  })
+                })
+              })
+            })
+          } else {
+            return res.send({ success: false, error: "no such :key/:metric pair. use: /create/"+req.params.key+"/"+req.params.metric+" or specify autocreate=true.", file: hoardFile })
+          }
+        } else {
+          hoard.update(hoardFile, value, time, function(err) {
+            if (err) return res.send({ success: false, error: err })
+            responses.push({ success: true })
+            updateMetrics(x+1)
+          })
+        }
+      })
+    } else {
+      return res.send(responses)
+    }
+  }
+  updateMetrics(0);
 });
 
 app.post("/incr/:key/:metric", function(req, res) {
