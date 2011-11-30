@@ -12,7 +12,7 @@ var redis = require('redis');
 var redisClient = redis.createClient();
 var redisNamespace = "avery";
 
-function ts() { return ~~(new Date().getTime() / 1000) }
+function ts() { return ~~((+new Date()) / 1000) }
 var port = process.env.PORT || 3000;
 
 var app = express.createServer(
@@ -118,22 +118,6 @@ app.post("/updateMany/:key", function(req, res) {
     }
   }
   updateMetrics(0);
-});
-
-app.post("/incr/:key/:metric", function(req, res) {
-  return res.send({ success: false, error: "this feature is not yet implemented. use: /update/"+req.params.key+"/"+req.params.metric })
-  var value = req.body.value;
-  var time = ts();
-  var values = [ [time, value], [time, value*2] ];
-  var hoardDirectory = path.join(".", hoardPath, req.params.key)
-  var hoardFile = path.join(hoardDirectory, req.params.metric+".hoard")
-  path.exists(hoardFile, function(exists) {
-    if (!exists) return res.send({ success: false, error: "no such :key/:metric pair. use: /create/"+req.params.key+"/"+req.params.metric, file: hoardFile })
-    hoard.updateMany(hoardFile, values, function(err) {
-      if (err) return res.send({ success: false, error: err })
-      res.send({ success: true })
-    })
-  })
 });
 
 // reads
