@@ -132,7 +132,7 @@ app.get("/fetch", function(req, res) {
       if (metric.key == "all") {
         exec("find "+hoardPath+" -name '"+metric.metric+"*.hoard'", function(err, stdout, stderr) {
           var allMetrics = _.map(_.compact(stdout.split('\n')), function(hoardFile) { return path.dirname(hoardFile).replace(hoardPath+"/","")+"/"+path.basename(hoardFile, '.hoard') });
-          _.each(allMetrics, function(allMetric) {
+          allMetrics.forEach(function(allMetric) {
             metrics.push({ key: allMetric.split("/")[0], metric: allMetric.split("/")[1] })
           })
           getMetrics(x+1)
