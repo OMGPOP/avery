@@ -8,10 +8,6 @@ var express = require('express'), _ = require('underscore');
 var hoard = require('hoard');
 var hoardPath = "hoard_files"
 
-var redis = require('redis');
-var redisClient = redis.createClient();
-var redisNamespace = "avery";
-
 function ts() { return ~~((+new Date()) / 1000) }
 var port = process.env.PORT || 3000;
 
@@ -154,42 +150,42 @@ app.get("/fetch", function(req, res) {
         })
       }
     } else {
-      result['metrics'] = result['metrics'].length == 1 ? result['metrics'] : [ { metric: 'all/'+metrics[0]['metric'], values: _.map(_.zip.apply([], _.pluck(result['metrics'], 'values')), function(c) { return _.reduce(c, function(d,e) { return Number(d)+Number(e) }) }) } ];
+      result['metrics'] = result['metrics'].length == 1 ? result['metrics'] : [ { metric: 'all/'+metrics[0]['metric'], values: _.compact(_.map(_.zip.apply([], _.pluck(result['metrics'], 'values')), function(c) { return _.reduce(c, function(d,e) { return Number(d)+Number(e) }) })) } ];
       res.send(result)
     }
   }
   getMetrics(0)
 });
 
-app.get("/watch/:key/:metric", function(req, res) {
-  var range = req.query.range||86400;
-  var offset = req.query.offset||0;
-  res.render('watch', { range: range, offset: offset, metrics: [ req.params.key+"/"+req.params.metric ] })
-});
-
-app.get("/:key", function(req, res) {
-  var hoardDirectory = path.join(".", hoardPath, req.params.key)
-  path.exists(hoardDirectory, function(exists) {
-    fs.readdir(hoardDirectory, function(err, files) {
-      var response = '<html><head></head><body><h1>'+req.params.key+'</h1>';
-      files.forEach(function(file) {
-        file = path.basename(file, '.hoard')
-        response += '<div><a href=/watch/'+req.params.key+'/'+file+'>'+req.params.key+'/'+file+'</a>';
-      })
-      res.send(response)
-    })
-  })
-});
-
-app.get("/", function(req, res) {
-  fs.readdir(hoardPath, function(err, files) {
-    var response = '<html><head></head><body>';
-    files.forEach(function(file) {
-      response += '<div><a href=/'+file+'>'+file+'</a>';
-    })
-    res.send(response)
-  })
-});
+//app.get("/watch/:key/:metric", function(req, res) {
+//  var range = req.query.range||86400;
+//  var offset = req.query.offset||0;
+//  res.render('watch', { range: range, offset: offset, metrics: [ req.params.key+"/"+req.params.metric ] })
+//});
+//
+//app.get("/:key", function(req, res) {
+//  var hoardDirectory = path.join(".", hoardPath, req.params.key)
+//  path.exists(hoardDirectory, function(exists) {
+//    fs.readdir(hoardDirectory, function(err, files) {
+//      var response = '<html><head></head><body><h1>'+req.params.key+'</h1>';
+//      files.forEach(function(file) {
+//        file = path.basename(file, '.hoard')
+//        response += '<div><a href=/watch/'+req.params.key+'/'+file+'>'+req.params.key+'/'+file+'</a>';
+//      })
+//      res.send(response)
+//    })
+//  })
+//});
+//
+//app.get("/", function(req, res) {
+//  fs.readdir(hoardPath, function(err, files) {
+//    var response = '<html><head></head><body>';
+//    files.forEach(function(file) {
+//      response += '<div><a href=/'+file+'>'+file+'</a>';
+//    })
+//    res.send(response)
+//  })
+//});
 
 app.listen(port, function() {
   console.log("Listening on " + port)
