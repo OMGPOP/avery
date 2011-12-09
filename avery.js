@@ -126,24 +126,35 @@ app.get("/fetch", function(req, res) {
   var time = ts();
   var endTime = req.query.offset ? time-req.query.offset : time;
   var startTime = req.query.range ? endTime-req.query.range : endTime-86400;
-  var metrics = typeof(req.query.metrics) == "string" ? [ req.query.metrics ] : req.query.metrics
-  metrics = _.map(metrics, function(metric) { return { key: metric.split("/")[0], metric: metric.split("/")[1] } })
+  var metrics = typeof(req.query.metrics) == "string" ? [ req.query.metrics ] : req.query.metrics;
+  metrics = _.map(metrics, function(metric) { return { key: metric.split("/")[0], metric: metric.split("/")[1] } });
   res.header('Access-Control-Allow-Origin','*');
-  var result = { success: true, ts: time, metrics: [] }
+  var result = { success: true, ts: time, metrics: [] };
   function getMetrics(x) {
     if (x < metrics.length) {
       var metric = metrics[x];
-      var hoardDirectory = path.join(".", hoardPath, metric.key)
-      var hoardFile = path.join(hoardDirectory, metric.metric+".hoard")
-      path.exists(hoardFile, function(exists) {
-        if (!exists) return res.send({ success: false, error: "no such :key/:metric pair. use: /create/"+metric.key+"/"+metric.metric, file: hoardFile })
-        hoard.fetch(hoardFile, startTime, endTime, function(err, timeInfo, values) {
-          if (err) return res.send({ success: false, error: err })
-          result['metrics'].push({ metric:metric.key+"/"+metric.metric, values: _.map(values, function(value) { return value == null ? 0 : value }) })
+      if (metric.key == "all") {
+        exec("find "+hoardPath+" -name '"+metric.metric+"*.hoard'", function(err, stdout, stderr) {
+          var allMetrics = _.map(_.compact(stdout.split('\n')), function(hoardFile) { return path.dirname(hoardFile).replace(hoardPath+"/","")+"/"+path.basename(hoardFile, '.hoard') });
+          _.each(allMetrics, function(allMetric) {
+            metrics.push({ key: allMetric.split("/")[0], metric: allMetric.split("/")[1] })
+          })
           getMetrics(x+1)
         })
-      })
+      } else {
+        var hoardDirectory = path.join(".", hoardPath, metric.key)
+        var hoardFile = path.join(hoardDirectory, metric.metric+".hoard")
+        path.exists(hoardFile, function(exists) {
+          if (!exists) return res.send({ success: false, error: "no such :key/:metric pair. use: /create/"+metric.key+"/"+metric.metric, file: hoardFile })
+          hoard.fetch(hoardFile, startTime, endTime, function(err, timeInfo, values) {
+            if (err) return res.send({ success: false, error: err })
+            result['metrics'].push({ metric: metric.key+"/"+metric.metric, values: _.map(values, function(value) { return value == null ? 0 : value }) })
+            getMetrics(x+1)
+          })
+        })
+      }
     } else {
+      result['metrics'] = result['metrics'].length == 1 ? result['metrics'] : [ { metric: 'all/'+metrics[0]['metric'], values: _.map(_.zip.apply([], _.pluck(result['metrics'], 'values')), function(c) { return _.reduce(c, function(d,e) { return Number(d)+Number(e) }) }) } ];
       res.send(result)
     }
   }
@@ -153,14 +164,7 @@ app.get("/fetch", function(req, res) {
 app.get("/watch/:key/:metric", function(req, res) {
   var range = req.query.range||86400;
   var offset = req.query.offset||0;
-  if (req.params.key == "all") {
-    exec("find "+hoardPath+" -name '"+req.params.metric+".hoard'", function(err, stdout, stderr) {
-      var metrics = _.map(_.compact(stdout.split('\n')), function(hoardFile) { return path.dirname(hoardFile).replace(hoardPath+"/","")+"/"+path.basename(hoardFile, '.hoard') });
-      res.render('watch', { range: range, offset: offset, metrics: metrics })
-    })
-  } else {
-    res.render('watch', { range: range, offset: offset, metrics: [ req.params.key+"/"+req.params.metric ] })
-  }
+  res.render('watch', { range: range, offset: offset, metrics: [ req.params.key+"/"+req.params.metric ] })
 });
 
 app.get("/:key", function(req, res) {
@@ -186,7 +190,6 @@ app.get("/", function(req, res) {
     res.send(response)
   })
 });
-
 
 app.listen(port, function() {
   console.log("Listening on " + port)
