@@ -127,6 +127,7 @@ app.get("/fetch", function(req, res) {
   res.header('Access-Control-Allow-Origin','*');
   var result = { success: true, ts: time, metrics: [] };
   function getMetrics(x) {
+    console.log("METRICS: ",metrics);
     if (x < metrics.length) {
       var metric = metrics[x];
       if (metric.key == "all") {
@@ -151,6 +152,7 @@ app.get("/fetch", function(req, res) {
       }
     } else {
       result['metrics'] = result['metrics'].length == 1 ? result['metrics'] : [ { metric: 'all/'+metrics[0]['metric'], values: _.compact(_.map(_.zip.apply([], _.pluck(result['metrics'], 'values')), function(c) { return _.reduce(c, function(d,e) { return Number(d||0)+Number(e||0) }) })) } ];
+      console.log("RESULT: ",result);
       res.send(result)
     }
   }
