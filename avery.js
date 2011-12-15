@@ -150,9 +150,10 @@ app.get("/fetch", function(req, res) {
         })
       }
     } else {
-      console.log(JSON.stringify(_.pluck(result['metrics'], 'values')));
+      var now = Date.now()
+      require('fs').writeFile("/tmp/test-pluck-"+now, JSON.stringify(_.pluck(result['metrics'], 'values')))
       result['metrics'] = result['metrics'].length == 1 ? result['metrics'] : [ { metric: 'all/'+metrics[0]['metric'], values: _.compact(_.map(_.zip.apply([], _.pluck(result['metrics'], 'values')), function(c) { return _.reduce(c, function(d,e) { return Number(d||0)+Number(e||0) }) })) } ];
-      console.log(JSON.stringify(result['metrics']))
+      require('fs').writeFile("/tmp/test-metrics-"+now, JSON.stringify(result['metrics']))
       res.send(result)
     }
   }
