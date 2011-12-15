@@ -152,7 +152,8 @@ app.get("/fetch", function(req, res) {
     } else {
       var now = Date.now()
       require('fs').writeFile("/tmp/test-pluck-"+now, JSON.stringify(_.pluck(result['metrics'], 'values')))
-      result['metrics'] = result['metrics'].length == 1 ? result['metrics'] : [ { metric: 'all/'+metrics[0]['metric'], values: _.compact(_.map(_.zip.apply([], _.pluck(result['metrics'], 'values')), function(c) { return _.reduce(c, function(d,e) { return Number(d||0)+Number(e||0) }) })) } ];
+      var maxLength = _.reduce(_.pluck(result['metrics'], 'values'), function(max, metric){ return (metric.length > max ? metric.length : max); }, 0);
+      result['metrics'] = [ { metric: 'all/'+metrics[0]['metric'], values: _.compact(_.map(_.zip.apply([], _.map(_.pluck(result['metrics'], 'values'), function(metric) { return (metric.length == maxLength ? metric : _.flatten(_.map(metric, function(number) { return _.map(_.compact(new Array((maxLength / metric.length)+1).join(number+" ").split(" ")), function(x) { return Number(x) }) })) ) })), function(c) { return _.reduce(c, function(d,e) { return Number(d||0)+Number(e||0) }) })) } ];
       require('fs').writeFile("/tmp/test-metrics-"+now, JSON.stringify(result['metrics']))
       res.send(result)
     }
