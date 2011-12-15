@@ -144,7 +144,7 @@ app.get("/fetch", function(req, res) {
           if (!exists) return res.send({ success: false, error: "no such :key/:metric pair. use: /create/"+metric.key+"/"+metric.metric, file: hoardFile })
           hoard.fetch(hoardFile, startTime, endTime, function(err, timeInfo, values) {
             if (err) return res.send({ success: false, error: err })
-            result['metrics'].push({ metric: metric.key+"/"+metric.metric, values: _.map(values, function(value) { return value == null ? 0 : value }) })
+            result['metrics'].push({ metric: metric.key+"/"+metric.metric, values: _.map(values, function(value) { return Number(value) }) })
             getMetrics(x+1)
           })
         })
