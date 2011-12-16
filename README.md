@@ -29,5 +29,13 @@ Example Usage
     # foreman start
     # curl -d "value=20" -d "autocreate=true" localhost:5000/update/localhost/example
     # open http://localhost:5000/watch/localhost/example
+    
+Example Graph
+-------------
+This is an example of a 30 minute time slice with 1 second updates (note how metric updates as applications report data).
+
+![avery example](http://staticcdn.iminlikewithyou.com/backend/avery/avery-animated.gif)
+
+
 
 Where did the name Avery come from? "real-time time-based metric storage, retrieval, and graphing service" or RTTBMSRAGS for short, was **a very** long name.
