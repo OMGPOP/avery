@@ -21,6 +21,7 @@ Web-service
 RRD-style Data Structure (Time series data)
 -------------------------------------------
 * see Hoard for more details - https://github.com/cgbystrom/hoard
+* Note: as of writing this the master branch has not included many changes contributed by OMGPOP - https://github.com/OMGPOP/hoard
 
 Example Usage
 -------------
