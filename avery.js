@@ -9,7 +9,6 @@ var hoard = require('hoard');
 var hoardPath = "hoard_files"
 
 function ts() { return ~~((+new Date()) / 1000) }
-var port = process.env.PORT || 3000;
 
 var app = express.createServer(
   express.logger(),
@@ -24,7 +23,6 @@ app.configure(function() {
   app.use(express.methodOverride());
 });
 
-// writes
 app.post("/create/:key/:metric", function(req, res) {
   var time = ts();
   var hoardDirectory = path.join(".", hoardPath, req.params.key)
@@ -116,7 +114,6 @@ app.post("/updateMany/:key", function(req, res) {
   updateMetrics(0);
 });
 
-// reads
 app.get("/fetch", function(req, res) {
   if (!req.query.metrics) return res.send({ success: false, error: "must specify query string metrics" })
   var time = ts();
@@ -150,47 +147,47 @@ app.get("/fetch", function(req, res) {
         })
       }
     } else {
-      var now = Date.now()
-      require('fs').writeFile("/tmp/test-pluck-"+now, JSON.stringify(_.pluck(result['metrics'], 'values')))
       var maxLength = _.reduce(_.pluck(result['metrics'], 'values'), function(max, metric){ return (metric.length > max ? metric.length : max); }, 0);
       result['metrics'] = [ { metric: 'all/'+metrics[0]['metric'], values: _.map(_.zip.apply([], _.map(_.pluck(result['metrics'], 'values'), function(metric) { return (metric.length == maxLength ? metric : _.flatten(_.map(metric, function(number) { return _.map(new Array((maxLength / metric.length)+1).join(number+" ").split(" "), function(x) { return Number(x) }) })) ) })), function(c) { return _.reduce(c, function(d,e) { return Number(d||0)+Number(e||0) }) }) } ];
-      require('fs').writeFile("/tmp/test-metrics-"+now, JSON.stringify(result['metrics']))
       res.send(result)
     }
   }
   getMetrics(0)
 });
 
-//app.get("/watch/:key/:metric", function(req, res) {
-//  var range = req.query.range||86400;
-//  var offset = req.query.offset||0;
-//  res.render('watch', { range: range, offset: offset, metrics: [ req.params.key+"/"+req.params.metric ] })
-//});
-//
-//app.get("/:key", function(req, res) {
-//  var hoardDirectory = path.join(".", hoardPath, req.params.key)
-//  path.exists(hoardDirectory, function(exists) {
-//    fs.readdir(hoardDirectory, function(err, files) {
-//      var response = '<html><head></head><body><h1>'+req.params.key+'</h1>';
-//      files.forEach(function(file) {
-//        file = path.basename(file, '.hoard')
-//        response += '<div><a href=/watch/'+req.params.key+'/'+file+'>'+req.params.key+'/'+file+'</a>';
-//      })
-//      res.send(response)
-//    })
-//  })
-//});
-//
-//app.get("/", function(req, res) {
-//  fs.readdir(hoardPath, function(err, files) {
-//    var response = '<html><head></head><body>';
-//    files.forEach(function(file) {
-//      response += '<div><a href=/'+file+'>'+file+'</a>';
-//    })
-//    res.send(response)
-//  })
-//});
+app.get("/watch/:key/:metric", function(req, res) {
+  var range = req.query.range||86400;
+  var offset = req.query.offset||0;
+  res.render('watch', { range: range, offset: offset, metrics: [ req.params.key+"/"+req.params.metric ] })
+});
 
+
+// hacked this together for easy browsing of keys/metrics.
+app.get("/:key", function(req, res) {
+  var hoardDirectory = path.join(".", hoardPath, req.params.key)
+  path.exists(hoardDirectory, function(exists) {
+    fs.readdir(hoardDirectory, function(err, files) {
+      var response = '<html><head></head><body><h1>'+req.params.key+'</h1>';
+      files.forEach(function(file) {
+        file = path.basename(file, '.hoard')
+        response += '<div><a href=/watch/'+req.params.key+'/'+file+'>'+req.params.key+'/'+file+'</a>';
+      })
+      res.send(response)
+    })
+  })
+});
+
+app.get("/", function(req, res) {
+  fs.readdir(hoardPath, function(err, files) {
+    var response = '<html><head></head><body>';
+    files.forEach(function(file) {
+      response += '<div><a href=/'+file+'>'+file+'</a>';
+    })
+    res.send(response)
+  })
+});
+
+var port = process.env.PORT || 3000;
 app.listen(port, function() {
   console.log("Listening on " + port)
 });

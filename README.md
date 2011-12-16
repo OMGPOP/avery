@@ -9,46 +9,24 @@ Goals
 * Generalized for any type of metric
 * Real-time accessibility
 * RRD-style Data Structure (Time series data)
-* Wizard for creating data structures
-* JSON/PNG Export
-* Pretty colors
-
-This project aims to duplicate basic RRD functionality via a node.js back-end and a Redis data-store.
+* Wizard for creating data structures (TODO)
+* JSON/PNG Export (TODO)
+* Pretty colors (TODO)
 
 Web-service
 -----------
 * NodeJS
 * Hoard data-storage
 
-Real-time accessibility
------------------------
-* Socket.IO
-* Redis Publish/Subscribe if needed
-
 RRD-style Data Structure (Time series data)
 -------------------------------------------
-
 * see Hoard for more details - https://github.com/cgbystrom/hoard
 
-Wizard for creating data structures
------------------------------------
-
-1. Resolution (Steps)
-2. Data stores (DS)
-3. Data archiving rules (DAR)
-
-
-JSON/PNG Export
----------------
-* JSON API
-* Canvas.toDataURL("image/png")
-
-Pretty colors
+Example Usage
 -------------
-* red
-* green
-* blue
-* shades of gray
-
+    # npm install
+    # foreman start
+    # curl -d "value=20" -d "autocreate=true" localhost:5000/update/localhost/example
+    # open http://localhost:5000/watch/localhost/example
 
 Where did the name Avery come from? "real-time time-based metric storage, retrieval, and graphing service" or RTTBMSRAGS for short, was **a very** long name.
