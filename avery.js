@@ -10,6 +10,23 @@ var hoardPath = "hoard_files"
 
 function ts() { return ~~((+new Date()) / 1000) }
 
+function normalizeArray(metrics) {
+  var maxLength = _.reduce(metrics, function(max, metric){ return (metric.length > max ? metric.length : max); }, 0);
+  var result = [];
+  metrics.forEach(function(metric) {
+    if (metric.length == maxLength) {
+      result.push(metric)
+    } else {
+      var tempMetric = [];
+      metric.forEach(function(number) {
+        tempMetric.push(_.map(new Array((maxLength / metric.length) + 1).join(number + " ").split(" ").splice(0,(maxLength / metric.length)), function(x) { return Number(x) }));
+      })
+      result.push(_.flatten(tempMetric));
+    }
+  })
+  return _.map(_.zip.apply([], result), function(numbers) { return _.reduce(numbers, function(one,two) { return Number(one||0)+Number(two||0) }) });
+}
+
 var app = express.createServer(
   express.logger(),
   express.static(__dirname + '/public')
@@ -163,9 +180,7 @@ app.get("/fetchMany", function(req, res) {
         })
       }
     } else {
-      var values = _.pluck(result['metrics'], 'values');
-      var maxLength = _.reduce(values, function(max, metric){ return (metric.length > max ? metric.length : max); }, 0);
-      result['metrics'] = [ { metric: 'all/'+metrics[0]['metric'], values: _.map(_.zip.apply([], _.map(values, function(metric) { return (metric.length == maxLength ? metric : _.flatten(_.map(metric, function(number) { return _.map(new Array((maxLength / metric.length)+1).join(number+" ").split(" "), function(x) { return ~~(Number(x)) }) })) ) })), function(c) { return _.reduce(c, function(d,e) { return Number(d||0)+Number(e||0) }) }) } ];
+      result['metrics'] = [ { metric: 'all/'+metrics[0]['metric'], values: normalizeArray(_.pluck(result['metrics'], 'values')) } ];
       res.send(result)
     }
   }
