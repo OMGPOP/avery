@@ -24,7 +24,7 @@ function normalizeArray(metrics) {
       result.push(_.flatten(tempMetric));
     }
   })
-  return _.map(_.zip.apply([], result), function(numbers) { return _.reduce(numbers, function(one,two) { return Number(one||0)+Number(two||0) }) });
+  return _.map(_.zip.apply([], result), function(numbers) { return ~~(_.reduce(numbers, function(one,two) { return Number(one||0)+Number(two||0) })) });
 }
 
 var app = express.createServer(
