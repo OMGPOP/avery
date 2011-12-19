@@ -1,6 +1,6 @@
 var Avery = {
   watch: function($chart, $chartData, range, offset, metrics) {
-    $.getJSON("/fetch", { range: range, offset: offset, metrics: metrics }, function(x) {
+    $.getJSON("/fetchMany", { range: range, offset: offset, metrics: metrics }, function(x) {
       $chartData.html("")
       // TODO: occasionally metrics are returned with different sample sizes (144 vs 1440), need to account for this.
       //       for now, we're just doing this on the backend.
