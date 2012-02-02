@@ -40,6 +40,75 @@ app.configure(function() {
   app.use(express.methodOverride());
 });
 
+var redis = require('redis');
+var redisClient = redis.createClient();
+app.get("/incr/:key/:metric", function(req, res) {
+  var key = req.params.key;
+  if (typeof(key) == "undefined") return res.send({ success: false, error: "Invalid key." })
+  var metric = req.params.metric;
+  if (typeof(metric) == "undefined") return res.send({ success: false, error: "Invalid metric." })
+  var redisKey = "avery::metrics::"+key+"::"+metric;
+  redisClient.incr(redisKey, function(err, value) {
+    if (err) return res.send({ success: false, error: err })
+    redisClient.sadd("avery::metrics", JSON.stringify({ key: key, metric: metric }), function(err, reply) {
+      if (err) return res.send({ success: false, error: err })
+      res.send({ success: true, key: key, metric: metric, value: value })
+    })
+  })
+})
+app.get("/get/:key/:metric", function(req, res) {
+  var key = req.params.key;
+  if (typeof(key) == "undefined") return res.send({ success: false, error: "Invalid key." })
+  var metric = req.params.metric;
+  if (typeof(metric) == "undefined") return res.send({ success: false, error: "Invalid metric." })
+  var redisKey = "avery::metrics::"+key+"::"+metric;
+  redisClient.get(redisKey, function(err, value) {
+    if (err) return res.send({ success: false, error: err })
+    res.send({ success: true, key: key, metric: metric, value: value })
+  })
+})
+
+
+function updateMetrics() {
+  var time = ts();
+  redisClient.smembers("avery::metrics", function(err, metrics) {
+    _.each(metrics, function(metric) {
+      var metric = JSON.parse(metric)
+      var redisKey = "avery::metrics::"+metric['key']+"::"+metric['metric'];
+      var redisKeyLast = redisKey+"::last"
+      redisClient.multi().get(redisKey).get(redisKeyLast).smove("avery::metrics", "avery::metrics_completed", redisKey).exec(function(err, reply) {
+        var now = Number(reply[0]);
+        var last = Number(reply[1]);
+        var value = now - last;
+        redisClient.set(redisKeyLast, now)
+        var hoardDirectory = path.join(".", hoardPath, metric['key'])
+        var hoardFile = path.join(hoardDirectory, metric['metric']+".hoard")
+        path.exists(hoardFile, function(exists) {
+          if (!exists) {
+            mkdirp(hoardDirectory, 0755, function (err) {
+              path.exists(hoardFile, function(exists) {
+                hoard.create(hoardFile, [ [ 60, 1440 ], [ 600, 1008 ], [ 3600, 720 ], [ 86400, 720 ] ], 0.5, function(err) {
+                  if (err) return console.log(err)
+                  hoard.update(hoardFile, value, time, function(err) {
+                    if (err) return console.log(err)
+                    console.log("updated "+hoardFile+" "+value)
+                  })
+                })
+              })
+            })
+          } else {
+            hoard.update(hoardFile, value, time, function(err) {
+              if (err) return console.log(err)
+              console.log("updated "+hoardFile+" "+value)
+            })
+          }
+        })
+      })
+    })
+  })
+}
+setInterval(function() { updateMetrics() }, 60000)
+
 app.post("/create/:key/:metric", function(req, res) {
   var time = ts();
   var hoardDirectory = path.join(".", hoardPath, req.params.key)
@@ -55,6 +124,7 @@ app.post("/create/:key/:metric", function(req, res) {
     })
   })
 });
+
 
 app.post("/update/:key/:metric", function(req, res) {
   if (typeof(req.body) == "undefined" || typeof(req.body.value) == "undefined") return res.send({ success: false, error: "no value specified." })
