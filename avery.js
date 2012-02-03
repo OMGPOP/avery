@@ -43,6 +43,7 @@ app.configure(function() {
 var redis = require('redis');
 var redisClient = redis.createClient();
 app.get("/incr/:key/:metric", function(req, res) {
+  res.header('Access-Control-Allow-Origin','*');
   var key = req.params.key;
   if (typeof(key) == "undefined") return res.send({ success: false, error: "Invalid key." })
   var metric = req.params.metric;
@@ -57,6 +58,7 @@ app.get("/incr/:key/:metric", function(req, res) {
   })
 })
 app.get("/get/:key/:metric", function(req, res) {
+  res.header('Access-Control-Allow-Origin','*');
   var key = req.params.key;
   if (typeof(key) == "undefined") return res.send({ success: false, error: "Invalid key." })
   var metric = req.params.metric;
@@ -69,14 +71,14 @@ app.get("/get/:key/:metric", function(req, res) {
 })
 
 
-function updateMetrics() {
+function updateIncrMetrics() {
   var time = ts();
   redisClient.smembers("avery::metrics", function(err, metrics) {
     _.each(metrics, function(metric) {
       var metric = JSON.parse(metric)
       var redisKey = "avery::metrics::"+metric['key']+"::"+metric['metric'];
       var redisKeyLast = redisKey+"::last"
-      redisClient.multi().get(redisKey).get(redisKeyLast).smove("avery::metrics", "avery::metrics_completed", redisKey).exec(function(err, reply) {
+      redisClient.multi().get(redisKey).get(redisKeyLast).smove("avery::metrics", "avery::metrics_completed", JSON.stringify(metric)).exec(function(err, reply) {
         var now = Number(reply[0]);
         var last = Number(reply[1]);
         var value = now - last;
@@ -107,7 +109,7 @@ function updateMetrics() {
     })
   })
 }
-setInterval(function() { updateMetrics() }, 60000)
+setInterval(function() { updateIncrMetrics() }, 60000)
 
 app.post("/create/:key/:metric", function(req, res) {
   var time = ts();
