@@ -232,7 +232,7 @@ app.get("/fetchMany", function(req, res) {
     if (x < metrics.length) {
       var metric = metrics[x];
       if (metric.key == "all") {
-        exec("find "+hoardPath+" -name '"+metric.metric+"*.hoard'", function(err, stdout, stderr) {
+        exec("find "+hoardPath+" -name '"+metric.metric+".hoard'", function(err, stdout, stderr) {
           var allMetrics = _.map(_.compact(stdout.split('\n')), function(hoardFile) { return path.dirname(hoardFile).replace(hoardPath+"/","")+"/"+path.basename(hoardFile, '.hoard') });
           allMetrics.forEach(function(allMetric) {
             metrics.push({ key: allMetric.split("/")[0], metric: allMetric.split("/")[1] })
