@@ -74,17 +74,18 @@ app.get("/get/:key/:metric", function(req, res) {
 function updateIncrMetrics() {
   var time = ts();
   redisClient.smembers("avery::metrics", function(err, metrics) {
-    _.each(metrics, function(metric) {
-      var metric = JSON.parse(metric)
-      var redisKey = "avery::metrics::"+metric['key']+"::"+metric['metric'];
-      var redisKeyLast = redisKey+"::last"
-      redisClient.multi().get(redisKey).get(redisKeyLast).smove("avery::metrics", "avery::metrics_completed", JSON.stringify(metric)).exec(function(err, reply) {
+    _.each(metrics, function(metricString) {
+      var redisKey = "avery::metrics::"+metricString;
+      var redisKeyLast = redisKey+"::last";
+      redisClient.multi().get(redisKey).get(redisKeyLast).smove("avery::metrics", "avery::metrics_completed", metricString).exec(function(err, reply) {
         var now = Number(reply[0]);
         var last = Number(reply[1]);
         var value = now - last;
         redisClient.set(redisKeyLast, now)
-        var hoardDirectory = path.join(".", hoardPath, metric['key'])
-        var hoardFile = path.join(hoardDirectory, metric['metric']+".hoard")
+        var key = metricString.split("::")[0]
+        var metric = metricString.split("::")[1]
+        var hoardDirectory = path.join(".", hoardPath, key)
+        var hoardFile = path.join(hoardDirectory, metric+".hoard")
         path.exists(hoardFile, function(exists) {
           if (!exists) {
             mkdirp(hoardDirectory, 0755, function (err) {
