@@ -51,7 +51,7 @@ app.get("/incr/:key/:metric", function(req, res) {
   var redisKey = "avery::metrics::"+key+"::"+metric;
   redisClient.incr(redisKey, function(err, value) {
     if (err) return res.send({ success: false, error: err })
-    redisClient.sadd("avery::metrics", JSON.stringify({ key: key, metric: metric }), function(err, reply) {
+    redisClient.sadd("avery::metrics", key+"::"+metric, function(err, reply) {
       if (err) return res.send({ success: false, error: err })
       res.send({ success: true, key: key, metric: metric, value: value })
     })
