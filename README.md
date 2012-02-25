@@ -40,5 +40,22 @@ Warning
 -------
 Avery is still in active development.
 
+deleting spikes
+---------------
+
+var time = 1329951180;
+var directory = "hoard_files/dst_paid/";
+require("fs").readdirSync(directory).filter(function(file){ return file.match(/^[^_].*\.hoard$/) }).forEach(function(filename) { 
+  hoard.fetch(directory+filename, time, time+240, function(err, timeInfo, values) {
+    if (values[1] != null) {
+      hoard.update(directory+filename, values[1], time+60, function(err) {
+        if (err) console.log(err)
+        console.log("updated",filename,"from",values[0],"to",values[1])
+      })
+    }
+  })
+})
+
+
 ---
 Where did the name Avery come from? "real-time time-based metric storage, retrieval, and graphing service" or RTTBMSRAGS for short, was **a very** long name.
