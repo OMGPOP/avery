@@ -8,6 +8,8 @@ var express = require('express'), _ = require('underscore');
 var hoard = require('hoard');
 var hoardPath = "hoard_files"
 
+var internalMetricsCache = {};
+
 function ts() { return ~~((+new Date()) / 1000) }
 
 function normalizeArray(metrics) {
@@ -243,14 +245,39 @@ app.get("/fetchMany", function(req, res) {
       } else {
         var hoardDirectory = path.join(".", hoardPath, metric.key)
         var hoardFile = path.join(hoardDirectory, metric.metric+".hoard")
-        path.exists(hoardFile, function(exists) {
-          if (!exists) return res.send({ success: false, error: "no such :key/:metric pair. use: /create/"+metric.key+"/"+metric.metric, file: hoardFile })
-          hoard.fetch(hoardFile, startTime, endTime, function(err, timeInfo, values) {
-            if (err) return res.send({ success: false, error: err })
-            result['metrics'].push({ metric: metric.key+"/"+metric.metric, values: _.map(values, function(value) { return Number(value) }) })
-            getMetrics(x+1)
+        if (typeof(internalMetricsCache[hoardFile]) == "undefined") {
+          path.exists(hoardFile, function(exists) {
+            if (!exists) return res.send({ success: false, error: "no such :key/:metric pair. use: /create/"+metric.key+"/"+metric.metric, file: hoardFile })
+            hoard.fetch(hoardFile, startTime, endTime, function(err, timeInfo, values) {
+              if (err) return res.send({ success: false, error: err })
+              var vals =  _.map(values, function(value) { return Number(value) })
+              if (typeof(internalMetricsCache[hoardFile]) != "object") internalMetricsCache[hoardFile] = {}
+              internalMetricsCache[hoardFile]['values'] = vals;
+              internalMetricsCache[hoardFile]['ts'] = ts();
+              result['metrics'].push({ metric: metric.key+"/"+metric.metric, values: vals })
+              getMetrics(x+1)
+            })
           })
-        })
+        } else {
+          var now = ts();
+          if ((now - internalMetricsCache[hoardFile]['ts']) > 30) {
+            path.exists(hoardFile, function(exists) {
+              if (!exists) return res.send({ success: false, error: "no such :key/:metric pair. use: /create/"+metric.key+"/"+metric.metric, file: hoardFile })
+              hoard.fetch(hoardFile, startTime, endTime, function(err, timeInfo, values) {
+                if (err) return res.send({ success: false, error: err })
+                var vals =  _.map(values, function(value) { return Number(value) })
+                if (typeof(internalMetricsCache[hoardFile]) != "object") internalMetricsCache[hoardFile] = {}
+                internalMetricsCache[hoardFile]['values'] = vals;
+                internalMetricsCache[hoardFile]['ts'] = ts();
+                result['metrics'].push({ metric: metric.key+"/"+metric.metric, values: vals })
+                getMetrics(x+1)
+              })
+            })
+          } else {
+            result['metrics'].push({ metric: metric.key+"/"+metric.metric, values: internalMetricsCache[hoardFile]['values'] })
+            getMetrics(x+1)
+          }
+        }
       }
     } else {
       result['metrics'] = [ { metric: 'all/'+metrics[0]['metric'], values: normalizeArray(_.pluck(result['metrics'], 'values')) } ];
