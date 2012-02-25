@@ -60,6 +60,7 @@ app.get("/incr/:key/:metric", function(req, res) {
   })
 })
 app.get("/get/:key/:metric", function(req, res) {
+  return res.send({ success: false, error: "temporarily unavailable." })
   res.header('Access-Control-Allow-Origin','*');
   var key = req.params.key;
   if (typeof(key) == "undefined") return res.send({ success: false, error: "Invalid key." })
@@ -207,6 +208,7 @@ app.post("/updateMany/:key", function(req, res) {
 });
 
 app.get("/fetch/:key/:metric", function(req, res) {
+  return res.send({ success: false, error: "temporarily unavailable." })
   var time = ts();
   var endTime = req.query.offset ? time-req.query.offset : time;
   var startTime = req.query.range ? endTime-req.query.range : endTime-86400;
