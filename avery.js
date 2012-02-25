@@ -253,14 +253,13 @@ app.get("/fetchMany", function(req, res) {
               var vals =  _.map(values, function(value) { return Number(value) })
               if (typeof(internalMetricsCache[hoardFile]) != "object") internalMetricsCache[hoardFile] = {}
               internalMetricsCache[hoardFile]['values'] = vals;
-              internalMetricsCache[hoardFile]['ts'] = ts();
+              internalMetricsCache[hoardFile]['ts'] = time;
               result['metrics'].push({ metric: metric.key+"/"+metric.metric, values: vals })
               getMetrics(x+1)
             })
           })
         } else {
-          var now = ts();
-          if ((now - internalMetricsCache[hoardFile]['ts']) > 30) {
+          if ((time - internalMetricsCache[hoardFile]['ts']) > 30) {
             path.exists(hoardFile, function(exists) {
               if (!exists) return res.send({ success: false, error: "no such :key/:metric pair. use: /create/"+metric.key+"/"+metric.metric, file: hoardFile })
               hoard.fetch(hoardFile, startTime, endTime, function(err, timeInfo, values) {
@@ -268,7 +267,7 @@ app.get("/fetchMany", function(req, res) {
                 var vals =  _.map(values, function(value) { return Number(value) })
                 if (typeof(internalMetricsCache[hoardFile]) != "object") internalMetricsCache[hoardFile] = {}
                 internalMetricsCache[hoardFile]['values'] = vals;
-                internalMetricsCache[hoardFile]['ts'] = ts();
+                internalMetricsCache[hoardFile]['ts'] = time;
                 result['metrics'].push({ metric: metric.key+"/"+metric.metric, values: vals })
                 getMetrics(x+1)
               })
