@@ -44,7 +44,7 @@ app.configure(function() {
 
 var redis = require('redis');
 var redisClient = redis.createClient();
-var redisClientBuffer = redis.createClient(6379, '0.0.0.0', { return_buffers:true });
+var redisClientBuffer = redis.createClient(6379, '0.0.0.0', { return_buffers: true });
 
 app.get("/incr/:key/:metric", function(req, res) {
   res.header('Access-Control-Allow-Origin','*');
@@ -84,7 +84,7 @@ app.get("/au/:key/:date", function(req, res) {
   var date = req.params.date;
   if (typeof(date) == "undefined") return res.send({ success: false, error: "Invalid date." })
   var redisKey = "avery::au::"+key+"::"+date;
-  redisClientBuffer.get("avery::au::dst_free::", function(err, reply) {
+  redisClientBuffer.get(redisKey, function(err, reply) {
     if (err) return res.send({ success: false, error: err })
     res.send({ success: true, key: key, date: date, active_users: populationBuffer(reply) })
   })
