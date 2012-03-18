@@ -61,5 +61,5 @@ function populationBuffer(c){for(var d=0,a=0,b=0;b<c.length;b+=4)a=c[b],a+=c[b+1
 //  })
 //}
 
-setInterval(function() { updateIncrMetrics() }, 10000)
+setInterval(function() { updateIncrMetrics() }, 60000)
 //setInterval(function() { updateHai() }, 2000)
