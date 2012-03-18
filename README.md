@@ -43,7 +43,21 @@ Avery is still in active development.
 deleting spikes
 ---------------
 
-var time = 1329951180;
+find the spot.
+
+var hoard = require('hoard');
+var time = 1330719540;
+var directory = "hoard_files/dst_paid/";
+var filename = "instl.hoard";
+hoard.fetch(directory+filename, time, time+240, function(err, timeInfo, values) {
+  console.log(values);
+})
+
+
+update the files.
+
+var hoard = require('hoard');
+var time = 1330719740;
 var directory = "hoard_files/dst_paid/";
 require("fs").readdirSync(directory).filter(function(file){ return file.match(/^[^_].*\.hoard$/) }).forEach(function(filename) { 
   hoard.fetch(directory+filename, time, time+240, function(err, timeInfo, values) {
