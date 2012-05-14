@@ -44,7 +44,6 @@ app.configure(function() {
 
 var redis = require('redis');
 var redisClient = redis.createClient();
-var redisClientBuffer = redis.createClient(6379, '0.0.0.0', { return_buffers: true });
 
 app.get("/incr/:key/:metric", function(req, res) {
   res.header('Access-Control-Allow-Origin','*');
@@ -54,6 +53,23 @@ app.get("/incr/:key/:metric", function(req, res) {
   if (typeof(metric) == "undefined") return res.send({ success: false, error: "Invalid metric." })
   var redisKey = "avery::metrics::"+key+"::"+metric;
   redisClient.incr(redisKey, function(err, value) {
+    if (err) return res.send({ success: false, error: err })
+    redisClient.sadd("avery::metrics", key+"::"+metric, function(err, reply) {
+      if (err) return res.send({ success: false, error: err })
+      res.send({ success: true, key: key, metric: metric, value: value })
+    })
+  })
+})
+app.get("/incrby/:key/:metric/:value", function(req, res) {
+  res.header('Access-Control-Allow-Origin','*');
+  var key = req.params.key;
+  if (typeof(key) == "undefined") return res.send({ success: false, error: "Invalid key." })
+  var metric = req.params.metric;
+  if (typeof(metric) == "undefined") return res.send({ success: false, error: "Invalid metric." })
+  var incr_value = req.params.value;
+  if (typeof(incr_value) == "undefined") return res.send({ success: false, error: "Invalid value." })
+  var redisKey = "avery::metrics::"+key+"::"+metric;
+  redisClient.incrby(redisKey, incr_value, function(err, value) {
     if (err) return res.send({ success: false, error: err })
     redisClient.sadd("avery::metrics", key+"::"+metric, function(err, reply) {
       if (err) return res.send({ success: false, error: err })
@@ -71,22 +87,6 @@ app.get("/get/:key/:metric", function(req, res) {
   redisClient.get(redisKey, function(err, value) {
     if (err) return res.send({ success: false, error: err })
     res.send({ success: true, key: key, metric: metric, value: value })
-  })
-})
-
-function population32(a){a-=a>>1&1431655765;a=(a>>2&858993459)+(a&858993459);a=(a>>4)+a&252645135;a+=a>>8;return a+(a>>16)&63};
-function populationBuffer(c){for(var d=0,a=0,b=0;b<c.length;b+=4)a=c[b],a+=c[b+1]<<8,a+=c[b+2]<<16,a+=c[b+3]<<24,d+=population32(a);return d};
-
-app.get("/au/:key/:date", function(req, res) {
-  res.header('Access-Control-Allow-Origin','*');
-  var key = req.params.key;
-  if (typeof(key) == "undefined") return res.send({ success: false, error: "Invalid key." })
-  var date = req.params.date;
-  if (typeof(date) == "undefined") return res.send({ success: false, error: "Invalid date." })
-  var redisKey = "avery::au::"+key+"::"+date;
-  redisClientBuffer.get(redisKey, function(err, reply) {
-    if (err) return res.send({ success: false, error: err })
-    res.send({ success: true, key: key, date: date, active_users: populationBuffer(reply) })
   })
 })
 

@@ -9,7 +9,6 @@ function ts() { return ~~((+new Date()) / 1000) }
 
 var redis = require('redis');
 var redisClient = redis.createClient();
-//var redisClientBuffer = redis.createClient(6379, '0.0.0.0', { return_buffers:true });
 
 function updateIncrMetrics() {
   var time = ts();
@@ -51,15 +50,4 @@ function updateIncrMetrics() {
   })
 }
 
-function population32(a){a-=a>>1&1431655765;a=(a>>2&858993459)+(a&858993459);a=(a>>4)+a&252645135;a+=a>>8;return a+(a>>16)&63};
-function populationBuffer(c){for(var d=0,a=0,b=0;b<c.length;b+=4)a=c[b],a+=c[b+1]<<8,a+=c[b+2]<<16,a+=c[b+3]<<24,d+=population32(a);return d};
-
-//function updateAu() {
-//  redisClientBuffer.get("avery::au::dst_free::", function(err, reply) {
-//    console.log(populationBuffer(reply))
-//    
-//  })
-//}
-
 setInterval(function() { updateIncrMetrics() }, 60000)
-//setInterval(function() { updateHai() }, 2000)
